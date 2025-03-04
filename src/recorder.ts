@@ -85,6 +85,7 @@ export class Recorder extends EventEmitter<RecorderEvents> {
       });
     }
     await getFFmpeg();
+    await this.vad;
   }
 
   /**
