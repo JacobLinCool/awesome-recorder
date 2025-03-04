@@ -1,5 +1,11 @@
 # awesome-recorder
 
+## 0.1.3
+
+### Patch Changes
+
+- [`c530ece`](https://github.com/JacobLinCool/awesome-recorder/commit/c530ecee38ed9b07bfc379c504a17f52caf95638) Thanks [@JacobLinCool](https://github.com/JacobLinCool)! - Move debug and @types/debug to deps
+
 ## 0.1.2
 
 ### Patch Changes
