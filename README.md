@@ -71,8 +71,15 @@ function stopRecording() {
 Main class for handling recording and voice detection.
 
 ```typescript
-new Recorder(vadOptions?: Partial<RealTimeVADOptions>);
+new Recorder(vadOptions?: Partial<RealTimeVADOptions> & { preprocessAudio?: (audio: Float32Array) => Float32Array });
 ```
+
+#### Options
+
+- **`preprocessAudio`**  
+  Optional callback to process audio data before encoding.  
+  Default behavior trims the last 2000 samples.  
+  You can remove unwanted tail noise, apply custom modifications, or access raw audio data with this callback.
 
 #### Methods
 

@@ -31,12 +31,24 @@ export class Recorder extends EventEmitter<RecorderEvents> {
   private innerOnSpeechEnd: (audio: Float32Array) => void | Promise<void> =
     () => {};
   private innerOnVADMisfire: () => void | Promise<void> = () => {};
+  private vadOptions: Partial<RealTimeVADOptions> = {};
+  private preprocessAudio: (audio: Float32Array) => Float32Array;
 
   /**
-   * @param {Partial<RealTimeVADOptions>} [vadOptions] - Optional configuration for the VAD.
+   * @param options - Optional configuration for the VAD and audio preprocessing.
+   * options.preprocessAudio is a callback to process audio before encoding.
    */
-  constructor(private vadOptions?: Partial<RealTimeVADOptions>) {
+  constructor(
+    options?: Partial<RealTimeVADOptions> & {
+      preprocessAudio?: (audio: Float32Array) => Float32Array;
+    },
+  ) {
+    const { preprocessAudio, ...vadOptions } = options || {};
     super();
+    this.vadOptions = vadOptions;
+    // Default behavior: trim last 8000 samples
+    this.preprocessAudio =
+      preprocessAudio ?? ((audio) => audio.slice(0, -2000));
   }
 
   /**
@@ -112,8 +124,9 @@ export class Recorder extends EventEmitter<RecorderEvents> {
     this.innerOnSpeechEnd = async (audio: Float32Array) => {
       isSpeaking = false;
       this.emit("speechStateChanged", { isSpeaking });
-      // remove last 8000 samples (0.5s)
-      const wav = float32ArrayToWav(audio.slice(0, -8000));
+
+      const processedAudio = this.preprocessAudio(audio);
+      const wav = float32ArrayToWav(processedAudio);
       const mp3 = await wav2mp3(wav);
       resolve(mp3);
       chunkPromise = new Promise<File>((res) => {
