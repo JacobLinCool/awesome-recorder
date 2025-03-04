@@ -8,7 +8,7 @@ const speakingIndicator = document.getElementById("speaking-indicator");
 const recordingsList = document.getElementById("recordings-list");
 
 // Create recorder instance
-const recorder = new Recorder();
+const recorder = new Recorder({ preSpeechPadFrames: 12 });
 
 // Listen for speech state changes
 recorder.on("speechStateChanged", ({ isSpeaking }) => {
