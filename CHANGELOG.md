@@ -1,5 +1,11 @@
 # awesome-recorder
 
+## 0.1.2
+
+### Patch Changes
+
+- [`6f1f4c7`](https://github.com/JacobLinCool/awesome-recorder/commit/6f1f4c7969f68fad32f148234f6bbd7e40d8e2e5) Thanks [@JacobLinCool](https://github.com/JacobLinCool)! - Fixed preload returning before vad is loaded.
+
 ## 0.1.1
 
 ### Patch Changes
