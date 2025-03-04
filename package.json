@@ -2,6 +2,23 @@
   "name": "awesome-recorder",
   "version": "0.1.0",
   "description": "A powerful in-browser audio recorder for recording audio with voice activity detection and mp3 encoding.",
+  "author": "JacobLinCool <jacoblincool@gmail.com> (https://github.com/JacobLinCool)",
+  "license": "MIT",
+  "keywords": [
+    "audio",
+    "recorder",
+    "voice activity detection",
+    "mp3",
+    "browser"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JacobLinCool/awesome-recorder.git"
+  },
+  "homepage": "https://github.com/JacobLinCool/awesome-recorder",
+  "bugs": {
+    "url": "https://github.com/JacobLinCool/awesome-recorder/issues"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,29 +31,13 @@
   "files": [
     "dist"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/JacobLinCool/awesome-recorder.git"
-  },
-  "homepage": "https://github.com/JacobLinCool/awesome-recorder",
-  "bugs": {
-    "url": "https://github.com/JacobLinCool/awesome-recorder/issues"
-  },
   "scripts": {
     "format": "prettier --write .",
     "build": "tsup",
     "dev": "vite",
-    "examples": "vite"
+    "examples": "vite",
+    "changeset": "changeset"
   },
-  "keywords": [
-    "audio",
-    "recorder",
-    "voice activity detection",
-    "mp3",
-    "browser"
-  ],
-  "author": "JacobLinCool <jacoblincool@gmail.com> (https://github.com/JacobLinCool)",
-  "license": "MIT",
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ricky0123/vad-web": "^0.0.22",
