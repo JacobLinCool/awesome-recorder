@@ -1,0 +1,167 @@
+import { MicVAD, type RealTimeVADOptions } from "@ricky0123/vad-web";
+import debug from "debug";
+import EventEmitter from "eventemitter3";
+import { float32ArrayToWav } from "./converters/float32ToWav";
+import { wav2mp3 } from "./converters/wav2mp3";
+import { getFFmpeg } from "./ffmpeg";
+
+const log = debug("recorder");
+
+/**
+ * Events emitted by the Recorder class
+ */
+export interface RecorderEvents {
+  speechStateChanged: (state: { isSpeaking: boolean }) => void;
+}
+
+/**
+ * Recorder class for audio recording with voice activity detection.
+ *
+ * Usage:
+ * 1. Call preload() to initialize the VAD and FFmpeg resources.
+ * 2. Call start() to begin recording. The start method returns an async generator
+ *    that yields MP3 files whenever a speech segment is detected.
+ * 3. Call stop() to cease recording.
+ */
+export class Recorder extends EventEmitter<RecorderEvents> {
+  private vad: Promise<MicVAD> | null = null;
+  private _started = false;
+  private stopGenerator: () => void = () => {};
+  private innerOnSpeechStart: () => void | Promise<void> = () => {};
+  private innerOnSpeechEnd: (audio: Float32Array) => void | Promise<void> =
+    () => {};
+  private innerOnVADMisfire: () => void | Promise<void> = () => {};
+
+  /**
+   * @param {Partial<RealTimeVADOptions>} [vadOptions] - Optional configuration for the VAD.
+   */
+  constructor(private vadOptions?: Partial<RealTimeVADOptions>) {
+    super();
+  }
+
+  /**
+   * Indicates whether the recorder is currently started.
+   * @returns True if recording has started.
+   */
+  public get started() {
+    return this._started;
+  }
+
+  /**
+   * Preloads the necessary resources for recording.
+   * This method is idempotent, and will be called by start() internally.
+   * @returns Resolves when VAD and FFmpeg are ready.
+   */
+  public async preload() {
+    if (!this.vad) {
+      this.vad = MicVAD.new({
+        model: "v5",
+        submitUserSpeechOnPause: true,
+        onSpeechStart: async (...args) => {
+          await this.innerOnSpeechStart(...args);
+          await this.vadOptions?.onSpeechStart?.(...args);
+        },
+        onSpeechEnd: async (...args) => {
+          await this.innerOnSpeechEnd(...args);
+          await this.vadOptions?.onSpeechEnd?.(...args);
+        },
+        onVADMisfire: async () => {
+          await this.innerOnVADMisfire();
+          await this.vadOptions?.onVADMisfire?.();
+        },
+        ...this.vadOptions,
+      });
+    }
+    await getFFmpeg();
+  }
+
+  /**
+   * Starts the recorder.
+   * Returns an async generator that yields an MP3 File for each detected speech segment.
+   * @throws If the recorder is already started or if initialization fails.
+   * @returns Async generator yielding recorded MP3 files.
+   */
+  public async *start(): AsyncGenerator<File, void> {
+    if (this._started) {
+      throw new Error("Already started");
+    }
+    this._started = true;
+
+    await this.preload();
+
+    if (!this.vad) {
+      throw new Error("VAD is not initialized");
+    }
+
+    let resolve: (file: File) => void;
+    let chunkPromise = new Promise<File>((res) => {
+      resolve = res;
+    });
+
+    const stopGenerator = new Promise<void>((res) => {
+      this.stopGenerator = () => res();
+    });
+
+    let isSpeaking = false;
+
+    const vad = await this.vad;
+    this.innerOnSpeechStart = async () => {
+      isSpeaking = true;
+      this.emit("speechStateChanged", { isSpeaking });
+    };
+    this.innerOnSpeechEnd = async (audio: Float32Array) => {
+      isSpeaking = false;
+      this.emit("speechStateChanged", { isSpeaking });
+      // remove last 8000 samples (0.5s)
+      const wav = float32ArrayToWav(audio.slice(0, -8000));
+      const mp3 = await wav2mp3(wav);
+      resolve(mp3);
+      chunkPromise = new Promise<File>((res) => {
+        resolve = res;
+      });
+    };
+    this.innerOnVADMisfire = async () => {
+      isSpeaking = false;
+      this.emit("speechStateChanged", { isSpeaking });
+    };
+
+    vad.start();
+
+    // 200ms delay to wait for the last audio chunk (if any)
+    const stopper = stopGenerator.then(
+      () => new Promise<undefined>((r) => setTimeout(r, 200)),
+    );
+    while (true) {
+      try {
+        const res = await Promise.race([chunkPromise, stopper]);
+        if (res === undefined) {
+          break;
+        }
+        yield res;
+      } catch (error) {
+        log("[ERROR]", error);
+        break;
+      }
+    }
+
+    if (isSpeaking) {
+      isSpeaking = false;
+      this.emit("speechStateChanged", { isSpeaking });
+    }
+
+    this._started = false;
+  }
+
+  /**
+   * Stops the recorder and pauses the VAD.
+   */
+  public async stop() {
+    this.stopGenerator();
+    const vad = await this.vad;
+    if (vad) {
+      vad.pause();
+    } else {
+      log("[WARN] Recorder is not started");
+    }
+  }
+}

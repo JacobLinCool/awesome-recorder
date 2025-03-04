@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Awesome Recorder Demo</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Awesome Recorder Demo</h1>
+
+      <div class="recorder-container">
+        <div id="status" class="status">Ready</div>
+        <div id="speaking-indicator" class="speaking-indicator"></div>
+
+        <div class="controls">
+          <button id="start-btn" class="btn">Start Recording</button>
+          <button id="stop-btn" class="btn" disabled>Stop Recording</button>
+        </div>
+
+        <div class="recordings-container">
+          <h2>Recordings</h2>
+          <div id="recordings-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
