@@ -1,16 +1,21 @@
-# Awesome Recorder
+# 🎙️ Awesome Recorder
 
-A powerful, lightweight library for recording audio with voice activity detection that automatically segments speech, and output small-sized and compact MP3 files.
+[![npm](https://img.shields.io/npm/v/awesome-recorder?style=flat-square)](https://www.npmjs.com/package/awesome-recorder)
 
-## Features
+> **Effortless audio recording with built-in Voice Activity Detection and optimized MP3 outputs in modern browsers.**
 
-- ✅ **Voice Activity Detection** - Automatically detects speech and segments recordings
-- ✅ **MP3 Encoding** - Produces optimized MP3 files ready for use
-- ✅ **Simple API** - Easy to use with async/await and async generators
-- ✅ **Event System** - Real-time speech state notifications
-- ✅ **TypeScript Support** - Full type definitions included
+`awesome-recorder` is a lightweight, powerful JavaScript library designed for seamless audio capture directly in the browser. It automatically segments speech using advanced Voice Activity Detection (VAD), encoding spoken audio into compact MP3 files—perfect for web apps, voice assistants, transcription services, and more.
 
-## Installation
+## ✨ Key Features
+
+- 🎤 **Automatic Voice Activity Detection** — Precisely detects and segments speech.
+- 📦 **Compact MP3 Encoding** — Small, optimized MP3 audio outputs.
+- ⚡ **Simple Async API** — Easy-to-use with async generators and async/await.
+- 🚀 **Event-Driven** — Real-time speech state notifications.
+- 🛠️ **Full TypeScript Support** — Complete type definitions included.
+- 🌐 **WebAssembly Optimized** — Ultra-lightweight custom FFmpeg WASM (~1.2 MB).
+
+## 🚩 Installation
 
 ```bash
 npm install awesome-recorder
@@ -20,149 +25,144 @@ yarn add awesome-recorder
 pnpm add awesome-recorder
 ```
 
-## Basic Usage
+## 🧑‍💻 Quick Start
 
-```javascript
+```typescript
 import { Recorder } from "awesome-recorder";
 
-// Create a recorder instance
 const recorder = new Recorder();
 
-// Optional: listen for speech state changes
+// Listen for speech state changes (optional)
 recorder.on("speechStateChanged", ({ isSpeaking }) => {
-  console.log("User is speaking:", isSpeaking);
+  console.log(`User is speaking: ${isSpeaking}`);
 });
 
-// Start recording
+// Start capturing audio segments
 async function startRecording() {
   try {
-    // Loop through audio chunks as they are detected
     for await (const audioChunk of recorder.start()) {
-      console.log("Speech detected:", audioChunk);
+      console.log("Detected speech segment:", audioChunk);
 
-      // Each audioChunk is an MP3 File object that you can:
-      const audioURL = URL.createObjectURL(audioChunk);
-
-      // Play the audio
-      const audio = new Audio(audioURL);
+      // Play audio directly in browser
+      const audio = new Audio(URL.createObjectURL(audioChunk));
       audio.play();
 
-      // Or save it
+      // Or trigger immediate download
       const link = document.createElement("a");
-      link.href = audioURL;
-      link.download = `recording-${Date.now()}.mp3`;
+      link.href = URL.createObjectURL(audioChunk);
+      link.download = `speech-${Date.now()}.mp3`;
       link.click();
     }
   } catch (error) {
-    console.error("Recording failed:", error);
+    console.error("Recording Error:", error);
   }
 }
 
-// Stop recording when needed
+// Stop recording gracefully
 function stopRecording() {
   recorder.stop();
 }
 ```
 
-## API Reference
+## 📚 API Reference
 
 ### `Recorder` Class
 
-The main class for handling audio recording with voice activity detection.
-
-#### Constructor
+Main class for handling recording and voice detection.
 
 ```typescript
-constructor(vadOptions?: Partial<RealTimeVADOptions>)
+new Recorder(vadOptions?: Partial<RealTimeVADOptions>);
 ```
-
-- `vadOptions`: Optional configuration for voice activity detection
 
 #### Methods
 
-- `preload(): Promise<void>` - Preloads necessary resources (VAD model and FFmpeg)
-- `start(): AsyncGenerator<File, void>` - Starts recording and yields MP3 files when speech is detected
-- `stop(): Promise<void>` - Stops recording
-- `on(event: string, callback: Function): void` - Subscribe to events
-- `off(event: string, callback: Function): void` - Unsubscribe from events
+- **`.preload(): Promise<void>`**  
+  Preloads the VAD model and FFmpeg WASM module.
+
+- **`.start(): AsyncGenerator<File, void>`**  
+  Starts audio recording, yielding MP3 segments upon speech detection.
+
+- **`.stop(): Promise<void>`**  
+  Stops audio recording.
+
+- **`.on(event: string, callback: Function): void`**  
+  Subscribes to recorder events.
+
+- **`.off(event: string, callback: Function): void`**  
+  Unsubscribes from recorder events.
 
 #### Events
 
-- `speechStateChanged` - Emitted when speech state changes with `{ isSpeaking: boolean }`
+- **`speechStateChanged`**  
+  Emitted with `{ isSpeaking: boolean }` when speech state changes.
 
-### Utility Functions
+## 🌐 WebAssembly Optimized
 
-- `float32ArrayToWav(float32Array: Float32Array, sampleRate?: number, numChannels?: number): Blob`
-- `wav2mp3(wav: Blob | File | ArrayBuffer): Promise<File>`
-- `setCoreURL(url: string): void` - Set custom URL for FFmpeg core
-- `setWasmURL(url: string): void` - Set custom URL for FFmpeg WASM module
+By default, `awesome-recorder` uses an optimized, custom FFmpeg WASM build from [`@hinagiku/ffmpeg-core`](https://www.npmjs.com/package/@hinagiku/ffmpeg-core), specifically tailored for minimal size (~1.2 MB). However, you can easily use your own custom build if preferred:
 
-## Advanced Usage
+```typescript
+import { setCoreURL, setWasmURL } from "awesome-recorder";
 
-### Custom VAD Options
+setCoreURL("https://your-cdn.com/ffmpeg-core.js");
+setWasmURL("https://your-cdn.com/ffmpeg-core.wasm");
+```
 
-```javascript
-import { Recorder } from "awesome-recorder";
+## 🚀 Advanced Usage
 
+### Custom Voice Activity Detection Options
+
+Fine-tune detection sensitivity and timing:
+
+```typescript
 const recorder = new Recorder({
-  positiveSpeechThreshold: 0.8, // Confidence threshold for positive speech detection
-  negativeSpeechThreshold: 0.8, // Confidence threshold for negative speech detection
-  minSpeechFrames: 5, // Minimum frames of speech before triggering onSpeechStart
-  preSpeechPadFrames: 10, // Keep this many frames before speech detection
-  redemptionFrames: 8, // Allow this many non-speech frames before ending segment
+  positiveSpeechThreshold: 0.9,
+  negativeSpeechThreshold: 0.7,
+  minSpeechFrames: 5,
+  preSpeechPadFrames: 15,
+  redemptionFrames: 10,
 });
 ```
 
-### Handling Audio Processing Progress
+See the [`@ricky0123/vad-web` Documentation](https://docs.vad.ricky0123.com/user-guide/api/#micvad) for detailed configuration options.
 
-```javascript
-import { Recorder } from "awesome-recorder";
+## ☁️ Uploading Audio Segments
 
-// Preload resources before user interaction
-async function prepareRecording() {
-  const recorder = new Recorder();
-  await recorder.preload();
-  console.log("Ready to record!");
-  return recorder;
-}
+Stream recorded segments directly to your backend:
 
-// Process audio as it's captured
-async function processAudio(recorder) {
-  let recordingCount = 0;
+```typescript
+async function streamSegments(recorder: Recorder) {
+  let segmentCount = 0;
 
   for await (const audioFile of recorder.start()) {
-    recordingCount++;
+    segmentCount++;
 
-    // Upload to server
     const formData = new FormData();
-    formData.append("audio", audioFile);
+    formData.append("segment", audioFile);
 
-    try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      console.log(`Segment ${recordingCount} uploaded:`, await response.json());
-    } catch (error) {
-      console.error("Upload failed:", error);
-    }
+    fetch("/api/upload-segment", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(`Uploaded segment ${segmentCount}:`, data))
+      .catch((err) => console.error("Upload failed:", err));
   }
 }
 ```
 
-## Browser Support
+## 🌍 Browser Compatibility
 
-This library works in all modern browsers that support:
+Compatible with modern browsers supporting:
 
-- WebAssembly
-- AudioContext
-- MediaDevices API
+- ✅ WebAssembly (WASM)
+- ✅ Web Audio API (`AudioContext`)
+- ✅ MediaDevices API
 
-## Bundlers
-
-When using Vite, you need to exclude `@ffmpeg/ffmpeg` from optimization:
+## ⚠️ Notes for Bundlers
 
 ### Vite
+
+When using Vite, exclude `@ffmpeg/ffmpeg` from dependency optimization:
 
 ```js
 // vite.config.js
@@ -173,12 +173,14 @@ export default {
 };
 ```
 
-## Example
+## 🔍 Example Project
 
-Check out the [example directory](./example/) for working example:
+Check out the practical demo in the [example](./example/) directory:
 
-- [Simple Recorder](./example/) - Basic recording functionality
+- **[👉 Simple Recorder Demo](https://jacoblincool.github.io/awesome-recorder/)**
 
-## License
+## 📄 License
 
-MIT
+Released under the **MIT License**.
+
+✨ **Enjoy effortless, efficient, and powerful audio recording in your web apps!** ✨
