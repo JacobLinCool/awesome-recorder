@@ -1,6 +1,6 @@
 {
   "name": "awesome-recorder",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A powerful in-browser audio recorder for recording audio with voice activity detection and mp3 encoding.",
   "author": "JacobLinCool <jacoblincool@gmail.com> (https://github.com/JacobLinCool)",
   "license": "MIT",

@@ -1,5 +1,11 @@
 # awesome-recorder
 
+## 0.2.1
+
+### Patch Changes
+
+- [`7f967d4`](https://github.com/JacobLinCool/awesome-recorder/commit/7f967d4d64f9e62dee41a58a336c19e6557325ca) Thanks [@JacobLinCool](https://github.com/JacobLinCool)! - Fix OutputFormat typing
+
 ## 0.2.0
 
 ### Minor Changes
