@@ -14,6 +14,25 @@ export interface RecorderEvents {
   speechStateChanged: (state: { isSpeaking: boolean }) => void;
 }
 
+export enum OutputFormat {
+  MP3 = "mp3",
+  WAV = "wav",
+  PCM = "pcm",
+}
+
+type MP3File = File & {
+  type: "audio/mpeg";
+};
+type WAVFile = File & {
+  type: "audio/wav";
+};
+
+export interface OutputFormatMap {
+  [OutputFormat.MP3]: MP3File;
+  [OutputFormat.WAV]: WAVFile;
+  [OutputFormat.PCM]: Float32Array;
+}
+
 /**
  * Recorder class for audio recording with voice activity detection.
  *
@@ -94,7 +113,9 @@ export class Recorder extends EventEmitter<RecorderEvents> {
    * @throws If the recorder is already started or if initialization fails.
    * @returns Async generator yielding recorded MP3 files.
    */
-  public async *start(): AsyncGenerator<File, void> {
+  public async *start<T extends OutputFormat = OutputFormat.MP3>(
+    outputFormat: T = OutputFormat.MP3 as T,
+  ): AsyncGenerator<OutputFormatMap[T], void> {
     if (this._started) {
       throw new Error("Already started");
     }
@@ -106,8 +127,8 @@ export class Recorder extends EventEmitter<RecorderEvents> {
       throw new Error("VAD is not initialized");
     }
 
-    let resolve: (file: File) => void;
-    let chunkPromise = new Promise<File>((res) => {
+    let resolve: (data: OutputFormatMap[T]) => void;
+    let chunkPromise = new Promise<OutputFormatMap[T]>((res) => {
       resolve = res;
     });
 
@@ -127,10 +148,26 @@ export class Recorder extends EventEmitter<RecorderEvents> {
       this.emit("speechStateChanged", { isSpeaking });
 
       const processedAudio = this.preprocessAudio(audio);
-      const wav = float32ArrayToWav(processedAudio);
-      const mp3 = await wav2mp3(wav);
-      resolve(mp3);
-      chunkPromise = new Promise<File>((res) => {
+
+      let result: OutputFormatMap[T];
+      switch (outputFormat) {
+        case OutputFormat.PCM:
+          result = processedAudio as OutputFormatMap[T];
+          break;
+        case OutputFormat.WAV:
+          const wav = float32ArrayToWav(processedAudio);
+          result = new File([wav], "audio.wav", {
+            type: "audio/wav",
+          }) as OutputFormatMap[T];
+          break;
+        case OutputFormat.MP3:
+          const wavForMp3 = float32ArrayToWav(processedAudio);
+          result = (await wav2mp3(wavForMp3)) as OutputFormatMap[T];
+          break;
+      }
+
+      resolve(result);
+      chunkPromise = new Promise<OutputFormatMap[T]>((res) => {
         resolve = res;
       });
     };

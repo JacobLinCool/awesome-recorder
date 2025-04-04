@@ -66,6 +66,14 @@ h2 {
   margin-bottom: 30px;
 }
 
+.format-select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: white;
+}
+
 .btn {
   padding: 10px 20px;
   border: none;
@@ -109,6 +117,13 @@ h2 {
 
 .recording-item audio {
   width: 100%;
+}
+
+.recording-item.highlight {
+  background-color: #f7f9fc;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  margin-bottom: 15px;
 }
 
 .download-btn {

@@ -9,7 +9,7 @@
 ## ✨ Key Features
 
 - 🎤 **Automatic Voice Activity Detection** — Precisely detects and segments speech.
-- 📦 **Compact MP3 Encoding** — Small, optimized MP3 audio outputs.
+- 📦 **Compact MP3 Encoding** — Small, optimized MP3 audio outputs. (WAV or raw PCM also supported)
 - ⚡ **Simple Async API** — Easy-to-use with async generators and async/await.
 - 🚀 **Event-Driven** — Real-time speech state notifications.
 - 🛠️ **Full TypeScript Support** — Complete type definitions included.
@@ -40,10 +40,11 @@ recorder.on("speechStateChanged", ({ isSpeaking }) => {
 // Start capturing audio segments
 async function startRecording() {
   try {
-    for await (const audioChunk of recorder.start()) {
+    // Choose output format: "mp3" (default), "wav", or "pcm"
+    for await (const audioChunk of recorder.start("mp3")) {
       console.log("Detected speech segment:", audioChunk);
 
-      // Play audio directly in browser
+      // Play audio directly in browser (MP3/WAV only)
       const audio = new Audio(URL.createObjectURL(audioChunk));
       audio.play();
 
@@ -86,8 +87,12 @@ new Recorder(vadOptions?: Partial<RealTimeVADOptions> & { preprocessAudio?: (aud
 - **`.preload(): Promise<void>`**  
   Preloads the VAD model and FFmpeg WASM module.
 
-- **`.start(): AsyncGenerator<File, void>`**  
-  Starts audio recording, yielding MP3 segments upon speech detection.
+- **`.start(outputFormat?: "mp3" | "wav" | "pcm"): AsyncGenerator<File | Float32Array, void>`**  
+  Starts audio recording, yielding segments upon speech detection:
+
+  - `"mp3"` (default): MP3 files
+  - `"wav"`: WAV files
+  - `"pcm"`: Raw PCM audio as Float32Array (16kHz sample rate)
 
 - **`.stop(): Promise<void>`**  
   Stops audio recording.
