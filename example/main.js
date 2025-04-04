@@ -1,4 +1,4 @@
-import { OutputFormat, Recorder, float32ArrayToWav } from "../dist/index.js";
+import { Recorder, float32ArrayToWav } from "../dist/index.js";
 
 // DOM elements
 const startBtn = document.getElementById("start-btn");
@@ -39,10 +39,11 @@ async function startRecording() {
     statusEl.textContent = "Recording...";
     stopBtn.disabled = false;
 
+    /** @type {import("../dist/index.js").OutputFormat} */
     const format = formatSelect.value;
     for await (const audio of recorder.start(format)) {
       console.log("Recording chunk received", audio);
-      if (format === OutputFormat.PCM) {
+      if (audio instanceof Float32Array) {
         addPCMToList(audio);
       } else {
         addRecordingToList(audio);
@@ -61,7 +62,7 @@ async function stopRecording() {
   await recorder.stop();
 
   // If we were recording PCM, create a combined WAV file
-  if (formatSelect.value === OutputFormat.PCM && pcmChunks.length > 0) {
+  if (formatSelect.value === "pcm" && pcmChunks.length > 0) {
     const totalLength = pcmChunks.reduce((acc, chunk) => acc + chunk.length, 0);
     const combined = new Float32Array(totalLength);
     let offset = 0;

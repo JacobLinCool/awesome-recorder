@@ -14,11 +14,7 @@ export interface RecorderEvents {
   speechStateChanged: (state: { isSpeaking: boolean }) => void;
 }
 
-export enum OutputFormat {
-  MP3 = "mp3",
-  WAV = "wav",
-  PCM = "pcm",
-}
+export type OutputFormat = "mp3" | "wav" | "pcm";
 
 type MP3File = File & {
   type: "audio/mpeg";
@@ -28,9 +24,9 @@ type WAVFile = File & {
 };
 
 export interface OutputFormatMap {
-  [OutputFormat.MP3]: MP3File;
-  [OutputFormat.WAV]: WAVFile;
-  [OutputFormat.PCM]: Float32Array;
+  mp3: MP3File;
+  wav: WAVFile;
+  pcm: Float32Array;
 }
 
 /**
@@ -113,8 +109,8 @@ export class Recorder extends EventEmitter<RecorderEvents> {
    * @throws If the recorder is already started or if initialization fails.
    * @returns Async generator yielding recorded MP3 files.
    */
-  public async *start<T extends OutputFormat = OutputFormat.MP3>(
-    outputFormat: T = OutputFormat.MP3 as T,
+  public async *start<T extends OutputFormat = "mp3">(
+    outputFormat: T = "mp3" as T,
   ): AsyncGenerator<OutputFormatMap[T], void> {
     if (this._started) {
       throw new Error("Already started");
@@ -151,16 +147,16 @@ export class Recorder extends EventEmitter<RecorderEvents> {
 
       let result: OutputFormatMap[T];
       switch (outputFormat) {
-        case OutputFormat.PCM:
+        case "pcm":
           result = processedAudio as OutputFormatMap[T];
           break;
-        case OutputFormat.WAV:
+        case "wav":
           const wav = float32ArrayToWav(processedAudio);
           result = new File([wav], "audio.wav", {
             type: "audio/wav",
           }) as OutputFormatMap[T];
           break;
-        case OutputFormat.MP3:
+        case "mp3":
           const wavForMp3 = float32ArrayToWav(processedAudio);
           result = (await wav2mp3(wavForMp3)) as OutputFormatMap[T];
           break;
