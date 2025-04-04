@@ -1,5 +1,11 @@
 # awesome-recorder
 
+## 0.2.0
+
+### Minor Changes
+
+- [`d883ae3`](https://github.com/JacobLinCool/awesome-recorder/commit/d883ae338e520ae3101514ed369faa0ee884916c) Thanks [@JacobLinCool](https://github.com/JacobLinCool)! - Add support for WAV and PCM output formats
+
 ## 0.1.3
 
 ### Patch Changes
